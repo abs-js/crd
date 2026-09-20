@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>CSRPWF</title>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<style>
+:root{--gold:#f0c14b;--muted:#93a0c2;--c:#9aa3b2;--i:#3dba6e;--r:#3b82f6;--e:#22d3ee;--ep:#a855f7;--l:#fbbf24;--lp:#ff6a1a}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;font-family:system-ui,Segoe UI,sans-serif;background:#0b1020;color:#e8eefc}
+.screen{display:none;position:absolute;inset:0;padding:10px;flex-direction:column}
+.screen.on{display:flex}
+.btn{background:#243049;color:#fff;border:0;border-radius:12px;padding:8px 12px;font-weight:800;cursor:pointer}
+.btn.gold{background:linear-gradient(#f0c14b,#c4921a);color:#1a1204}
+.btn.danger{background:#7a2434}
+.btn:disabled{opacity:.45}
+.topbar{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.spacer{flex:1}
+.coins{font-weight:900;color:var(--gold)}
+.logo{font-size:34px;font-weight:900;letter-spacing:1px;text-align:center}
+.logo small{display:block;font-size:11px;font-weight:700}
+#menu.on{background:#c48a4a}
+.evo-bg{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(90deg,#b97b3c 0 18px,#c99552 18px 20px,#c08645 20px 38px)}
+.evo-bg:before{content:"";position:absolute;left:50%;top:10%;transform:translateX(-50%);width:min(540px,88vw);height:70%;background:#f4ead0;border:2px solid #e2d2a8;box-shadow:0 12px 0 #8a5a2a66;background-image:repeating-linear-gradient(#0000 0 27px,#d7c7a0 27px 28px)}
+.evo-title,.evo-center,.evo-corner{position:relative;z-index:1}
+.evo-title{text-align:center;padding-top:6px}
+#menu .logo{color:#3a2410;text-shadow:0 2px 0 #fff6}
+#menu .logo small{color:#5c3d1c}
+.evo-center{margin:auto;display:flex;flex-direction:column;align-items:center;gap:10px}
+.table-top{display:flex;flex-direction:column;align-items:center;gap:8px;min-height:220px}
+.pop-play{width:min(260px,70vw);height:72px;border-radius:40px;border:6px solid #fff;background:linear-gradient(#b6f35a,#49b51a);color:#163800;font-size:32px;font-weight:900;box-shadow:0 8px 0 #2f7a12}
+.pop-online{width:min(200px,56vw);height:48px;border-radius:28px;border:4px solid #fff;background:linear-gradient(#6ec8ff,#2b7de0);color:#fff;font-size:20px;font-weight:900}
+.evo-corner{position:absolute;left:12px;bottom:12px;display:flex;flex-direction:column;gap:8px}
+.pop-round{width:62px;height:62px;border-radius:50%;border:4px solid #fff;background:linear-gradient(#ffe27a,#f0a51a);color:#3a2400;font-size:18px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.pop-round span{font-size:8px;font-weight:800}
+.wait-box{min-height:70px;text-align:center;color:#3a2410;font-weight:800}
+.kid-card{background:#fff8;border-radius:14px;padding:10px 14px;color:#3a2410}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px}
+.card{width:118px;height:164px;border-radius:14px;position:relative;transform-style:preserve-3d;transition:transform .45s;cursor:pointer}
+.card.flipped{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:14px;border:3px solid #888;overflow:hidden;background:#1a2038}
+.back{transform:rotateY(180deg);padding:8px;display:flex;flex-direction:column;gap:4px;color:#3a2410;background:repeating-linear-gradient(45deg,#c9a36c 0 8px,#bf9660 8px 10px),linear-gradient(#c4a06a,#8d6238)}
+.back .cname,.back .hint,.back b{color:#3a2410}
+.cname{font-size:11px;font-weight:800;text-align:center;padding:5px 18px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.art{height:90px;display:flex;align-items:center;justify-content:center}
+.stats{display:flex;justify-content:space-around;font-size:10px;font-weight:800;padding:4px}
+.stat{display:flex;flex-direction:column;align-items:center}
+.rar{position:absolute;top:5px;left:5px;font-size:10px;font-weight:900;background:#0008;padding:1px 5px;border-radius:6px}
+.ttag{position:absolute;top:5px;right:5px;font-size:8px;font-weight:900;padding:1px 4px;border-radius:6px;background:#000a}
+.use-tag{position:absolute;bottom:18px;right:-8px;transform:rotate(-34deg);background:#f0c14b;color:#2a1a00;font-size:10px;font-weight:900;padding:3px 14px;z-index:4}
+.card.r-c .face{border-color:var(--c)}
+.card.r-i .face{border-color:var(--i);box-shadow:0 0 10px #3dba6e44}
+.card.r-r .face{border-color:var(--r);box-shadow:0 0 10px #3b82f644}
+.card.r-e .face{border-color:var(--e);box-shadow:0 0 12px #22d3ee55}
+.card.r-ep .face{border-color:var(--ep);box-shadow:0 0 14px #a855f766}
+.card.r-l .face{border-color:var(--l);box-shadow:0 0 16px #fbbf2466}
+.card.r-lp .face{border-color:var(--lp);box-shadow:0 0 18px #ff6a1a88}
+.panel{background:#0e1428cc;border:1px solid #ffffff14;border-radius:14px;padding:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.hint{color:var(--muted);font-size:13px}
+.shop-talk{display:flex;gap:12px;align-items:flex-start;background:#0e1428cc;border:1px solid #fff2;border-radius:16px;padding:12px;margin:8px 0}
+.shop-talk.hide{display:none}
+#collection.on{flex-direction:row}
+.col-main{flex:1;min-width:0;overflow:auto;display:flex;flex-direction:column}
+#deckSide{width:0;padding:0;overflow:hidden;background:#10182e;transition:width .25s}
+#deckSide.on{width:min(300px,40vw);padding:10px;overflow:auto;border-left:1px solid #fff2}
+.slot-empty{width:110px;height:140px;border:2px dashed #fff3;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#93a0c2;font-size:12px}
+.card.pick{outline:2px solid #f0c14b}
+#game{padding:6px;overflow:hidden}
+#game.on{background:linear-gradient(#12182c,#0b1020)}
+.hud{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
+.hud-box{background:#0e1428ee;border:1px solid #ffffff18;border-radius:14px;padding:6px 10px;display:flex;align-items:center;gap:8px}
+.hud-box.me{justify-content:flex-end}
+.pip{width:12px;height:12px;border-radius:50%;background:#243049;border:2px solid #6b7bb8;display:inline-block}
+.pip.on{background:#f0c14b;border-color:#fff}
+.pts{font-size:20px;font-weight:900}
+.hud-mid{display:flex;flex-direction:column;align-items:center}
+.timer{width:46px;height:46px;border-radius:50%;border:3px solid var(--gold);display:flex;align-items:center;justify-content:center;font-weight:900}
+.timer.low{border-color:#ef4444;color:#fecaca}
+.turn-chip{background:#0006;border-radius:999px;padding:2px 10px;font-size:11px}
+.arena{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:space-between;min-height:0}
+.slot .card{width:122px;height:168px}
+.hand{display:flex;gap:6px;justify-content:center}
+.hand .card,.tiny{width:72px;height:100px}
+.tiny .art,.hand .art{height:48px}
+.actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:4px 0}
+.fieldrow{display:flex;align-items:center;gap:10px}
+.pile{width:58px;min-height:74px;border:1px dashed #fff3;border-radius:10px;padding:3px;text-align:center;font-size:10px;color:var(--muted)}
+.pile .card{width:50px;height:70px;margin:0 auto}
+.hpbar{height:6px;background:#0006;border-radius:4px;overflow:hidden;margin:0 6px 4px}
+.hpbar i{display:block;height:100%;background:#4ade80}
+.banner{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%) scale(.9);background:#0b1020f2;border:2px solid var(--gold);padding:10px 16px;border-radius:14px;font-weight:900;opacity:0;pointer-events:none;z-index:40}
+.banner.on{opacity:1}
+.logbox{height:34px;overflow:hidden;font-size:11px;background:#0005;border-radius:8px;padding:4px 8px;width:min(720px,96%)}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#111c;padding:10px 14px;border-radius:12px;opacity:0;z-index:90}
+.toast.on{opacity:1}
+.modal{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:70;padding:16px}
+.modal.on{display:flex}
+.modal .box{background:#151c33;border-radius:16px;padding:16px;max-width:520px;width:100%;max-height:90vh;overflow:auto}
+.flyer{position:fixed;z-index:65;pointer-events:none;transition:left .45s,top .45s}
+.cowtag,.gughtag{padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800}
+.cowtag{background:#7f1d1d;color:#fecaca}
+.gughtag{background:#9a3412;color:#ffedd5}
+.shop-item{display:flex;flex-direction:column;align-items:center;gap:6px}
+.opt{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #fff1}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:50}
+.selecting .card{outline:2px dashed #f0c14b}
+input[type=text],input[type=number]{background:#0b1020;border:1px solid #fff3;color:#fff;padding:8px;border-radius:10px}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div id="fly"></div>
+<div id="toast" class="toast"></div>
+<div id="menu" class="screen on">
+  <div class="evo-bg"></div>
+  <div class="evo-title">
+    <img src="csrpwf-logo.svg" width="64" height="64" alt="logo" style="display:block;margin:0 auto 4px"/>
+    <div class="logo">CSRPWF<small>Cards from School Reccess To Play With Friends</small></div>
+    <p class="hint" id="menuHint"></p>
+  </div>
+  <div class="evo-center">
+    <div class="table-top">
+      <button class="pop-play" onclick="waitKid()">Jogar</button>
+      <button class="pop-online" onclick="goMode()">Online</button>
+      <div id="waitBox" class="wait-box"></div>
+      <div class="best4 row" id="best4"></div>
+    </div>
+  </div>
+  <div class="evo-corner">
+    <button class="pop-round" onclick="goShop()">🛒<span>Loja</span></button>
+    <button class="pop-round" onclick="goOptions()">⚙️<span>Opções</span></button>
+    <button class="pop-round" onclick="openDeckFromMenu()">🃏<span>Baralho</span></button>
+    <button class="pop-round" onclick="toggleFS()">⛶<span>Tela cheia</span></button>
+  </div>
+</div>
+<div id="collection" class="screen">
+  <div class="col-main">
+    <div class="topbar"><button class="btn" onclick="goMenu()">Voltar</button><h2>Suas cartas</h2>
+      <button class="btn gold" onclick="toggleDeckSide()">Baralho</button>
+      <div class="spacer"></div><div class="coins" id="colCoins"></div></div>
+    <p class="hint">Só as cartas que você tem. Clique numa livre e num espaço do baralho.</p>
+    <div class="grid" id="colGrid"></div>
+  </div>
+  <aside id="deckSide">
+    <div class="topbar"><h2>Baralho</h2><span class="hint" id="deckCount"></span><button class="btn" onclick="toggleDeckSide()">Fechar</button></div>
+    <p class="hint" id="deckPickHint"></p>
+    <div class="grid" id="deckGrid"></div>
+  </aside>
+</div>
+<div id="shop" class="screen">
+  <div class="topbar"><button class="btn" onclick="goMenu()">Voltar</button><h2>Loja</h2><div class="spacer"></div><div class="coins" id="shopCoins"></div></div>
+  <div class="shop-talk" id="shopTalk">
+    <svg viewBox="0 0 80 90" width="64" height="72"><rect x="24" y="48" width="32" height="30" rx="8" fill="#3b82f6"/><circle cx="40" cy="32" r="16" fill="#f2c49a"/><path d="M22 30 q18 -22 36 0" fill="#2a1a10"/><circle cx="34" cy="32" r="2" fill="#111"/><circle cx="46" cy="32" r="2" fill="#111"/></svg>
+    <div><b>Dono da loja</b><p>Oi! Vendo cartas separadas e pacotes. Sexta tem pacote raro — bem caro.</p><button class="btn" onclick="hideShopTalk()">Beleza</button></div>
+  </div>
+  <p class="hint" id="shopDay"></p>
+  <h3>7 cartas do dia</h3>
+  <div class="row" id="dailyRow"></div>
+  <h3 style="margin-top:12px">Pacotes</h3>
+  <div class="panel row" style="justify-content:space-between"><div><b>Pacote comum</b><div class="hint">5 cartas · 3 por dia · 50</div></div><button class="btn gold" id="packBtn" onclick="buyPack()">50</button></div>
+  <div class="panel row" id="rarePackRow" style="justify-content:space-between;margin-top:8px;display:none"><div><b>Pacote raro de sexta</b><div class="hint">900 moedas</div></div><button class="btn gold" onclick="buyRarePack()">900</button></div>
+</div>
+<div id="options" class="screen">
+  <div class="topbar"><button class="btn" onclick="goMenu()">Voltar</button><h2>Opções</h2></div>
+  <div class="panel" style="max-width:520px">
+    <div class="opt"><span>Modo gráfico pesado</span><button class="btn" id="gfxBtn" onclick="toggleGfx()"></button></div>
+    <div class="opt"><span>Som</span><button class="btn" id="sfxBtn" onclick="toggleSfx()"></button></div>
+    <div class="opt"><span>Tela cheia</span><button class="btn" onclick="toggleFS()">Ativar / sair</button></div>
+    <div class="opt"><span>Reiniciar</span><button class="btn danger" onclick="resetSave()">Apagar</button></div>
+  </div>
+</div>
+<div id="modes" class="screen">
+  <div class="topbar"><button class="btn" onclick="goMenu()">Voltar</button><h2>Online</h2></div>
+  <div class="panel" style="max-width:480px;margin:auto">
+    <p class="hint">Aposta opcional. Os dois colocam o mesmo valor; quem ganha leva o pote.</p>
+    <div class="row" style="margin:8px 0"><label>Aposta</label><input id="pvpBet" type="number" min="0" value="0" style="width:100px"/></div>
+    <div class="row">
+      <button class="btn gold" onclick="hostRoom()">Criar sala</button>
+      <button class="btn" onclick="showJoin()">Entrar</button>
+      <button class="btn" onclick="randomMatch()">Aleatória</button>
+    </div>
+    <div id="netBox" style="margin-top:10px"></div>
+  </div>
+</div>
+<div id="game" class="screen">
+  <div class="hud">
+    <div class="hud-box"><div><div id="oppName">Rival</div><div id="oppPips"></div></div><span class="pts" id="oppPts">0</span><span id="oppCow"></span></div>
+    <div class="hud-mid"><div class="timer" id="timerEl">30</div><div class="turn-chip" id="turnTxt"></div></div>
+    <div class="hud-box me"><span id="myCow"></span><span class="pts" id="myPts">0</span><div><div>Você</div><div id="myPips"></div></div><button class="btn" onclick="toggleFS()">⛶</button><button class="btn" onclick="concede()">Sair</button></div>
+  </div>
+  <div class="arena">
+    <div class="banner" id="banner"></div>
+    <div><div class="hand" id="oppHand"></div><div class="fieldrow"><div class="pile" id="oppDiscard"></div><div class="slot" id="oppSlot"></div><div class="pile" id="oppDeckPile"></div></div></div>
+    <div class="logbox" id="logbox"></div>
+    <div style="display:flex;flex-direction:column;align-items:center">
+      <div class="fieldrow"><div class="pile" id="myDiscard"></div><div class="slot" id="mySlot"></div><div class="pile" id="myDeckPile"></div></div>
+      <div class="actions" id="actions"></div>
+      <div class="hand" id="myHand"></div>
+    </div>
+  </div>
+</div>
+<div id="modal" class="modal"><div class="box" id="modalBox"></div></div>
+<script>
+const RAW = [
+{id:"spark",n:"Fagulha",r:"c",a:300,d:200,h:800,fn:null,k:"orb",t:null},
+{id:"sprout",n:"Broto",r:"c",a:200,d:300,h:900,fn:null,k:"slime",t:"planta"},
+{id:"pebble",n:"Seixo",r:"c",a:250,d:400,h:1000,fn:null,k:"golem",t:"fisico"},
+{id:"bubble",n:"Bolha",r:"c",a:200,d:200,h:700,fn:null,k:"orb",t:"agua"},
+{id:"pengu",n:"Pinguim Recreio",r:"c",a:300,d:200,h:800,fn:null,k:"pengu",t:"agua"},
+{id:"shroom",n:"Cogumelo",r:"c",a:250,d:250,h:850,fn:null,k:"shroom",t:"planta"},
+{id:"cloudcat",n:"Gato-Nuvem",r:"c",a:300,d:150,h:750,fn:null,k:"cat",t:null},
+{id:"coinfish",n:"Peixe-Moeda",r:"c",a:200,d:200,h:700,fn:null,k:"fish",t:"agua"},
+{id:"ant",n:"Formiga",r:"c",a:350,d:150,h:650,fn:null,k:"bug",t:"fisico"},
+{id:"seed",n:"Semente",r:"c",a:150,d:350,h:900,fn:null,k:"slime",t:"planta"},
+{id:"snail",n:"Caracol",r:"i",a:300,d:500,h:1100,fn:null,k:"slime",t:"planta"},
+{id:"bread",n:"P\u00e3ozinho",r:"i",a:400,d:300,h:1000,fn:null,k:"orb",t:null},
+{id:"fox",n:"Raposa",r:"i",a:500,d:250,h:900,fn:null,k:"fox",t:"fogo"},
+{id:"owl",n:"Coruja",r:"i",a:350,d:350,h:1100,fn:null,k:"owl",t:"magico"},
+{id:"cactus",n:"Cacto",r:"i",a:400,d:450,h:1200,fn:null,k:"cactus",t:"planta"},
+{id:"snowolf",n:"Lobo de Neve",r:"i",a:500,d:300,h:1000,fn:null,k:"wolf",t:"agua"},
+{id:"bee",n:"Abelha",r:"i",a:450,d:200,h:900,fn:null,k:"bee",t:"planta"},
+{id:"isle",n:"Ilhota",r:"r",a:600,d:500,h:1400,fn:null,k:"golem",t:"agua"},
+{id:"hawk",n:"Gavi\u00e3o",r:"r",a:700,d:300,h:1200,fn:null,k:"bird",t:"fisico"},
+{id:"ink",n:"Tinta Viva",r:"r",a:550,d:400,h:1300,fn:null,k:"orb",t:"sombrio"},
+{id:"prism",n:"Prisma",r:"r",a:500,d:500,h:1400,fn:null,k:"orb",t:"cientifico"},
+{id:"smokedrake",n:"Draco Fuma\u00e7a",r:"r",a:650,d:350,h:1300,fn:null,k:"drake",t:"fogo"},
+{id:"crystal",n:"Cristal",r:"r",a:400,d:700,h:1600,fn:null,k:"golem",t:"fisico"},
+{id:"siren",n:"Sereia",r:"r",a:600,d:400,h:1400,fn:null,k:"fish",t:"agua"},
+{id:"sunlion",n:"Le\u00e3o Solar",r:"r",a:600,d:400,h:1500,fn:null,k:"lion",t:"fogo"},
+{id:"moonser",n:"Serpente Lunar",r:"r",a:600,d:300,h:1400,fn:null,k:"snake",t:"sombrio"},
+{id:"alch",n:"Alquimista Estelar",r:"e",a:500,d:400,h:1600,fn:"heal",k:"mage",t:"cientifico"},
+{id:"tide",n:"Samurai das Mar\u00e9s",r:"e",a:700,d:400,h:1500,fn:"buffatk",k:"knight",t:"agua"},
+{id:"dream",n:"Arquiteto de Sonhos",r:"e",a:500,d:500,h:1700,fn:"shield",k:"mage",t:"magico"},
+{id:"timehawk",n:"Falc\u00e3o Temporal",r:"e",a:600,d:300,h:1400,fn:"draw",k:"bird",t:"cientifico"},
+{id:"fedormelo",n:"Fedormelo",r:"e",a:1000,d:800,h:1200,fn:"stinksetup",k:"melon",t:"planta"},
+{id:"bard",n:"Bardo do Eco",r:"e",a:500,d:400,h:1500,fn:"weaken",k:"mage",t:"magico"},
+{id:"comet",n:"Ferreiro de Cometas",r:"e",a:600,d:400,h:1600,fn:"forge",k:"golem",t:"fisico"},
+{id:"ladrao",n:"Ladr\u00e3o",r:"ep",a:800,d:600,h:600,fn:"steal",k:"thief",t:null},
+{id:"moth",n:"Rainha das Mariposas",r:"ep",a:600,d:500,h:1700,fn:"dust",k:"bug",t:"sombrio"},
+{id:"stareng",n:"Engenheiro Estelar",r:"ep",a:700,d:500,h:1800,fn:"pierce",k:"mage",t:"cientifico"},
+{id:"hydra",n:"Hidra de Origami",r:"ep",a:600,d:600,h:2000,fn:"regen",k:"drake",t:"planta"},
+{id:"paladin",n:"Paladino do Arco-\u00cdris",r:"ep",a:700,d:600,h:1900,fn:"vow",k:"knight",t:"magico"},
+{id:"trocavidas",n:"Troca-vidas",r:"ep",a:1000,d:1100,h:1500,fn:"lifelink",k:"bond",t:"sombrio"},
+{id:"season",n:"Drag\u00e3o das Esta\u00e7\u00f5es",r:"l",a:900,d:600,h:2200,fn:"cycle",k:"drake",t:"planta"},
+{id:"horizon",n:"Guardi\u00e3o do Horizonte",r:"l",a:800,d:800,h:2400,fn:"wall",k:"golem",t:"fisico"},
+{id:"etern",n:"F\u00eanix Eterna",r:"l",a:900,d:500,h:2000,fn:"revive",k:"bird",t:"fogo"},
+{id:"levi",n:"Leviat\u00e3 das Nuvens",r:"l",a:800,d:700,h:2300,fn:"storm",k:"fish",t:"agua"},
+{id:"core",n:"N\u00facleo da Cria\u00e7\u00e3o",r:"lp",a:1000,d:800,h:2600,fn:"bang",k:"orb",t:"cientifico"},
+{id:"breath",n:"O Primeiro Sopro",r:"lp",a:1100,d:700,h:2400,fn:"truehit",k:"drake",t:"fogo"},
+{id:"duende",n:"Duende",r:"lp",a:100,d:5000,h:7000,fn:"execute",k:"goblin",t:null},
+{id:"cloud",n:"Nuvem Pregui\u00e7osa",r:"c",a:200,d:300,h:800,fn:null,k:"orb",t:"agua"},
+{id:"chalk",n:"Giz Falante",r:"c",a:250,d:200,h:750,fn:null,k:"orb",t:null},
+{id:"eraser",n:"Borracha Bravo",r:"c",a:300,d:250,h:800,fn:null,k:"slime",t:null},
+{id:"bell",n:"Sino do Recreio",r:"i",a:400,d:300,h:1000,fn:null,k:"orb",t:"magico"},
+{id:"x1",n:"Apito Furado",r:"c",a:200,d:200,h:600,fn:null,k:"orb",t:null},
+{id:"x2",n:"Mochila Alada",r:"c",a:200,d:250,h:600,fn:null,k:"slime",t:null},
+{id:"x3",n:"Caderno Denteado",r:"c",a:250,d:300,h:650,fn:null,k:"cat",t:null},
+{id:"x4",n:"R\u00e9gua Samurai",r:"c",a:300,d:350,h:700,fn:null,k:"bird",t:null},
+{id:"x5",n:"Cola-Monstro",r:"c",a:300,d:200,h:750,fn:null,k:"golem",t:null},
+{id:"x6",n:"Estojo Fantasma",r:"c",a:350,d:250,h:800,fn:null,k:"mage",t:null},
+{id:"x7",n:"Lanche Assombrado",r:"c",a:200,d:300,h:800,fn:null,k:"knight",t:null},
+{id:"x8",n:"P\u00e1tio Vivo",r:"c",a:250,d:350,h:850,fn:null,k:"drake",t:null},
+{id:"x9",n:"Muro de Giz",r:"c",a:250,d:200,h:900,fn:null,k:"fish",t:null},
+{id:"x10",n:"Bola Pulante",r:"c",a:300,d:250,h:950,fn:null,k:"lion",t:null},
+{id:"x11",n:"Amarelinha",r:"c",a:350,d:300,h:600,fn:null,k:"snake",t:null},
+{id:"x12",n:"Pi\u00e3o de A\u00e7o",r:"c",a:200,d:350,h:650,fn:null,k:"bug",t:null},
+{id:"x13",n:"El\u00e1stico Gigante",r:"c",a:200,d:200,h:650,fn:null,k:"wolf",t:null},
+{id:"x14",n:"Pipa Trovejante",r:"c",a:250,d:250,h:700,fn:null,k:"fox",t:null},
+{id:"x15",n:"Peteca-Fogo",r:"c",a:300,d:300,h:750,fn:null,k:"owl",t:null},
+{id:"x16",n:"Gude Cristal",r:"c",a:350,d:350,h:800,fn:null,k:"bee",t:null},
+{id:"x17",n:"Tampinha Rei",r:"c",a:350,d:200,h:850,fn:null,k:"cactus",t:null},
+{id:"x18",n:"Roda de Skate",r:"c",a:200,d:300,h:850,fn:null,k:"pengu",t:null},
+{id:"x19",n:"Banco da Fila",r:"c",a:250,d:350,h:900,fn:null,k:"shroom",t:null},
+{id:"x20",n:"Bebe-Fonte",r:"c",a:300,d:200,h:950,fn:null,k:"melon",t:null},
+{id:"x21",n:"Vaso Quebrado",r:"c",a:300,d:250,h:600,fn:null,k:"thief",t:null},
+{id:"x22",n:"Vassoura Voadora",r:"c",a:350,d:300,h:650,fn:null,k:"goblin",t:null},
+{id:"x23",n:"Pano de Quadro",r:"c",a:200,d:350,h:700,fn:null,k:"bond",t:null},
+{id:"x24",n:"Tinta Guache",r:"c",a:250,d:200,h:700,fn:null,k:"orb",t:null},
+{id:"x25",n:"Carimbo Vivo",r:"c",a:250,d:250,h:750,fn:null,k:"slime",t:null},
+{id:"x26",n:"Grampeador",r:"c",a:300,d:300,h:800,fn:null,k:"cat",t:null},
+{id:"x27",n:"Clipe-Cobra",r:"c",a:350,d:350,h:850,fn:null,k:"bird",t:null},
+{id:"x28",n:"Post-it Ninja",r:"c",a:350,d:200,h:900,fn:null,k:"golem",t:null},
+{id:"x29",n:"Mapa Rasgado",r:"c",a:200,d:250,h:900,fn:null,k:"mage",t:null},
+{id:"x30",n:"Globo Ocular",r:"c",a:250,d:300,h:950,fn:null,k:"knight",t:null},
+{id:"x31",n:"\u00c1baco S\u00e1bio",r:"c",a:300,d:350,h:600,fn:null,k:"drake",t:null},
+{id:"x32",n:"Calculadora",r:"c",a:300,d:200,h:650,fn:null,k:"fish",t:null},
+{id:"x33",n:"Microsc\u00f3pio",r:"c",a:350,d:250,h:700,fn:null,k:"lion",t:null},
+{id:"x34",n:"Tubo de Ensaio",r:"c",a:200,d:300,h:750,fn:null,k:"snake",t:null},
+{id:"x35",n:"\u00cdm\u00e3 Teimoso",r:"c",a:250,d:200,h:750,fn:null,k:"bug",t:null},
+{id:"x36",n:"B\u00fassola Perdida",r:"c",a:250,d:250,h:800,fn:null,k:"wolf",t:null},
+{id:"x37",n:"Ampulheta",r:"c",a:300,d:300,h:850,fn:null,k:"fox",t:null},
+{id:"x38",n:"Term\u00f4metro",r:"c",a:350,d:350,h:900,fn:null,k:"owl",t:null},
+{id:"x39",n:"Seringa de Tinta",r:"c",a:200,d:200,h:950,fn:null,k:"bee",t:null},
+{id:"x40",n:"Rob\u00f4 de Sucata",r:"c",a:200,d:250,h:950,fn:null,k:"cactus",t:null},
+{id:"x41",n:"Drone de Papel",r:"i",a:500,d:400,h:900,fn:null,k:"pengu",t:"fisico"},
+{id:"x42",n:"Sat\u00e9lite de Folha",r:"i",a:300,d:450,h:950,fn:null,k:"shroom",t:"cientifico"},
+{id:"x43",n:"Cometa Giz",r:"i",a:350,d:500,h:1000,fn:null,k:"melon",t:"agua"},
+{id:"x44",n:"Buraco-Negro Lanche",r:"i",a:350,d:300,h:1050,fn:null,k:"thief",t:"fogo"},
+{id:"x45",n:"Quasar L\u00e1pis",r:"i",a:400,d:350,h:1100,fn:null,k:"goblin",t:"planta"},
+{id:"x46",n:"Nebulosa Borracha",r:"i",a:450,d:400,h:1100,fn:null,k:"bond",t:"magico"},
+{id:"x47",n:"Pulsar Apito",r:"i",a:500,d:450,h:1150,fn:null,k:"orb",t:"sombrio"},
+{id:"x48",n:"Anel de Saturno",r:"i",a:500,d:500,h:1200,fn:null,k:"slime",t:"fisico"},
+{id:"x49",n:"Marciano da Fila",r:"i",a:300,d:300,h:1250,fn:null,k:"cat",t:"cientifico"},
+{id:"x50",n:"ET do P\u00e1tio",r:"i",a:350,d:350,h:800,fn:null,k:"bird",t:"agua"},
+{id:"x51",n:"Ovni-Lancheira",r:"i",a:400,d:450,h:850,fn:null,k:"golem",t:"fogo"},
+{id:"x52",n:"Alien Giz",r:"i",a:400,d:500,h:850,fn:null,k:"mage",t:"planta"},
+{id:"x53",n:"Capit\u00e3o Recreio",r:"i",a:450,d:300,h:900,fn:null,k:"knight",t:"magico"},
+{id:"x54",n:"Pirata da Cantina",r:"i",a:500,d:350,h:950,fn:null,k:"drake",t:"sombrio"},
+{id:"x55",n:"Cavaleiro do Giz",r:"i",a:500,d:400,h:1000,fn:null,k:"fish",t:"fisico"},
+{id:"x56",n:"Arqueira da Quadra",r:"i",a:300,d:450,h:1050,fn:null,k:"lion",t:"cientifico"},
+{id:"x57",n:"Mago da Biblioteca",r:"i",a:350,d:500,h:1050,fn:null,k:"snake",t:"agua"},
+{id:"x58",n:"Bruxa da Dire\u00e7\u00e3o",r:"i",a:400,d:300,h:1100,fn:null,k:"bug",t:"fogo"},
+{id:"x59",n:"Fantasma do Banheiro",r:"i",a:400,d:350,h:1150,fn:null,k:"wolf",t:"planta"},
+{id:"x60",n:"Zumbi da Fila",r:"i",a:450,d:400,h:1200,fn:null,k:"fox",t:"magico"},
+{id:"x61",n:"Vampiro do Suco",r:"i",a:500,d:450,h:1250,fn:null,k:"owl",t:"sombrio"},
+{id:"x62",n:"Lobisomem do Campo",r:"i",a:300,d:500,h:800,fn:null,k:"bee",t:"fisico"},
+{id:"x63",n:"M\u00famia do Arm\u00e1rio",r:"i",a:300,d:300,h:800,fn:null,k:"cactus",t:"cientifico"},
+{id:"x64",n:"Esqueleto de Giz",r:"i",a:350,d:350,h:850,fn:null,k:"pengu",t:"agua"},
+{id:"x65",n:"Fada do P\u00e1tio",r:"i",a:400,d:400,h:900,fn:null,k:"shroom",t:"fogo"},
+{id:"x66",n:"Ogro da Merenda",r:"r",a:450,d:550,h:1350,fn:null,k:"melon",t:"planta"},
+{id:"x67",n:"Troll da Escada",r:"r",a:450,d:600,h:1400,fn:null,k:"thief",t:"magico"},
+{id:"x68",n:"Elfo do Jardim",r:"r",a:500,d:700,h:1400,fn:null,k:"goblin",t:"sombrio"},
+{id:"x69",n:"An\u00e3o da Oficina",r:"r",a:550,d:450,h:1450,fn:null,k:"bond",t:"fisico"},
+{id:"x70",n:"Sereia da Fonte",r:"r",a:600,d:500,h:1500,fn:null,k:"orb",t:"cientifico"},
+{id:"x71",n:"Centauro da Pista",r:"r",a:600,d:550,h:1550,fn:null,k:"slime",t:"agua"},
+{id:"x72",n:"Grifo da Diretoria",r:"r",a:650,d:600,h:1600,fn:null,k:"cat",t:"fogo"},
+{id:"x73",n:"F\u00eanix do Forno",r:"r",a:700,d:650,h:1650,fn:null,k:"bird",t:"planta"},
+{id:"x74",n:"Hidra da Torneira",r:"r",a:450,d:700,h:1650,fn:null,k:"golem",t:"magico"},
+{id:"x75",n:"Quimera do Laborat\u00f3rio",r:"r",a:450,d:450,h:1100,fn:null,k:"mage",t:"sombrio"},
+{id:"x76",n:"Bas\u00edlisco do Corredor",r:"r",a:500,d:500,h:1150,fn:null,k:"knight",t:"fisico"},
+{id:"x77",n:"Kraken da Piscina",r:"r",a:550,d:550,h:1200,fn:null,k:"drake",t:"cientifico"},
+{id:"x78",n:"Yeti da Geladeira",r:"r",a:550,d:600,h:1250,fn:null,k:"fish",t:"agua"},
+{id:"x79",n:"Fada-Dente",r:"r",a:600,d:650,h:1250,fn:null,k:"lion",t:"fogo"},
+{id:"x80",n:"Duende do Intervalo",r:"r",a:650,d:700,h:1300,fn:null,k:"snake",t:"planta"},
+{id:"x81",n:"G\u00e1rgula do Port\u00e3o",r:"e",a:750,d:500,h:1550,fn:"draw",k:"bug",t:"magico"},
+{id:"x82",n:"Golem de Tijolo",r:"e",a:750,d:550,h:1600,fn:"weaken",k:"wolf",t:"sombrio"},
+{id:"x83",n:"Golem de Massa",r:"e",a:500,d:600,h:1650,fn:"forge",k:"fox",t:"fisico"},
+{id:"x84",n:"Slime de Gelatina",r:"e",a:550,d:650,h:1700,fn:"stinksetup",k:"owl",t:"cientifico"},
+{id:"x85",n:"Slime de Tinta",r:"e",a:600,d:750,h:1700,fn:"heal",k:"bee",t:"agua"},
+{id:"x86",n:"Gato da Cantina",r:"e",a:600,d:500,h:1750,fn:"buffatk",k:"cactus",t:"fogo"},
+{id:"x87",n:"Cachorro Carteiro",r:"e",a:650,d:550,h:1800,fn:"shield",k:"pengu",t:"planta"},
+{id:"x88",n:"Pombo Mensageiro",r:"e",a:700,d:600,h:1850,fn:"draw",k:"shroom",t:"magico"},
+{id:"x89",n:"Rato da Biblioteca",r:"e",a:750,d:650,h:1300,fn:"weaken",k:"melon",t:"sombrio"},
+{id:"x90",n:"Sapo da Po\u00e7a",r:"e",a:750,d:700,h:1300,fn:"forge",k:"thief",t:"fisico"},
+{id:"x91",n:"Lagarto do Muro",r:"ep",a:700,d:950,h:1550,fn:"reflect",k:"goblin",t:"cientifico"},
+{id:"x92",n:"Corvo do Campan\u00e1rio",r:"ep",a:750,d:600,h:1600,fn:"steal",k:"bond",t:"agua"},
+{id:"x93",n:"Peixe do Aqu\u00e1rio",r:"ep",a:800,d:650,h:1650,fn:"dust",k:"orb",t:"fogo"},
+{id:"x94",n:"Polvo da Pia",r:"ep",a:800,d:700,h:1700,fn:"pierce",k:"slime",t:"planta"},
+{id:"x95",n:"Caranguejo do Tanque",r:"ep",a:850,d:750,h:1750,fn:"regen",k:"cat",t:"magico"},
+{id:"x96",n:"Estrela do Quadro",r:"ep",a:900,d:800,h:1750,fn:"vow",k:"bird",t:"sombrio"},
+{id:"x97",n:"Lua de Papel",r:"l",a:1050,d:1050,h:2200,fn:"cycle",k:"golem",t:"fisico"},
+{id:"x98",n:"Sol de Cartolina",r:"l",a:1050,d:800,h:2250,fn:"wall",k:"mage",t:"cientifico"},
+{id:"x99",n:"Tesoura Alada",r:"l",a:800,d:850,h:2300,fn:"revive",k:"knight",t:"agua"},
+{id:"x100",n:"Borracha-Drag\u00e3o",r:"lp",a:950,d:900,h:2250,fn:"point",k:"drake",t:"fogo"}
+];
+const AB = {
+  heal:{n:"Cura",d:"Cura 600."},
+  buffatk:{n:"Maré",d:"+400 no próximo ataque."},
+  shield:{n:"Miragem",d:"Escudo igual à DEF."},
+  draw:{n:"Tique",d:"Compra 1 carta."},
+  weaken:{n:"Canção",d:"Ataque inimigo -300."},
+  forge:{n:"Têmpera",d:"+300 ATK."},
+  stinksetup:{n:"Fedor de Entrada",d:"Se a próxima ação for trocar, a carta que entra fica fedorenta. Não acaba a rodada.",keepTurn:true},
+  steal:{n:"Roubo",d:"Rouba a carta ativa. A sua volta no fim. Troque por outra.",keepTurn:true},
+  dust:{n:"Pó Lunar",d:"-200 ATK no rival e 300 de dano."},
+  pierce:{n:"Orbe",d:"500 ignorando escudo."},
+  regen:{n:"Dois Pescoços",d:"Cura 800 (1200 se ferida)."},
+  vow:{n:"Juramento",d:"Escudo 800 e cura 300."},
+  lifelink:{n:"Elo",d:"Ao ativar, vai à mão e protege a carta que entra."},
+  reflect:{n:"Reflexo",d:"Devolve 400."},
+  cycle:{n:"Ciclo",d:"600 dano, 600 cura, compra 1."},
+  wall:{n:"Muralha",d:"Escudo 1200. Próximo ataque pela metade."},
+  revive:{n:"Renascimento",d:"Revive com 1000 se cair a 0."},
+  storm:{n:"Temporal",d:"700 dano e o rival não defende."},
+  bang:{n:"Big Bang Mini",d:"800 dano, 800 cura, +200 ATK/DEF."},
+  truehit:{n:"Sopro",d:"Dano igual ao ATK ignorando escudo."},
+  execute:{n:"Fim Imediato",d:"A carta rival é vencida. A rodada acaba."},
+  point:{n:"Ponto",d:"Ganha 1 ponto agora."}
+};
+const TYPES={agua:{n:"Água",c:"#38bdf8",beats:["fogo"]},fogo:{n:"Fogo",c:"#fb7185",beats:["planta"]},planta:{n:"Planta",c:"#4ade80",beats:["agua"]},
+magico:{n:"Mágico",c:"#c4b5fd",beats:["sombrio"]},sombrio:{n:"Sombrio",c:"#818cf8",beats:["fisico"]},fisico:{n:"Físico",c:"#fbbf24",beats:[]},
+cientifico:{n:"Científico",c:"#67e8f9",beats:["agua","fogo","planta","magico","sombrio"]}};
+const RAR={c:{n:"Comum",price:10},i:{n:"Incomum",price:35},r:{n:"Raro",price:90},e:{n:"Especial",price:220},ep:{n:"Épico",price:500},l:{n:"Lendário",price:1100},lp:{n:"Mítico",price:2000}};
+const RLABEL={c:"C",i:"I",r:"R",e:"E",ep:"E+",l:"L",lp:"L+"};
+function expand(raw){
+  const ab=raw.fn?Object.assign({fn:raw.fn},AB[raw.fn]||{n:raw.fn,d:""}):null;
+  return {id:raw.id,name:raw.n,r:raw.r,atk:raw.a,def:raw.d,hp:raw.h,ab,k:raw.k,t:raw.t};
+}
+const CARDS=RAW.map(expand);
+const BYID=Object.fromEntries(CARDS.map(c=>[c.id,c]));
+const SAVE_KEY="csrpwf_v4", DECK_SIZE=24, PACK_PRICE=50, RARE_PACK_PRICE=900;
+const KIDS=["Bia","Dudu","Nanda","Teco","Lulu","Gabi","Ruan","Mel","Vini","Juca","Nico","Bel","Fê","Kaká","Tonho","Lia","Pepo","Cris"];
+const AI_PAY={fredom:20,gom:40,hep:70,itc:120};
+
+let save,G=null,net={peer:null,conn:null,isHost:false,code:""},deckPick=null,waitingKid=null;
+
+function today(){return new Date().toISOString().slice(0,10)}
+function yesterday(){const d=new Date();d.setDate(d.getDate()-1);return d.toISOString().slice(0,10)}
+function isFriday(){return new Date().getDay()===5}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function owns(id){return !!(save.col&&save.col[id])}
+function giveCard(id){if(owns(id))return false;save.col[id]=1;return true}
+function cardIdOf(x){return x&&typeof x==="object"?x.id:x}
+function asInst(x){return x&&typeof x==="object"&&x.hp!=null?x:instOf(x)}
+function handIndex(h,id){return h.findIndex(x=>cardIdOf(x)===id)}
+function instOf(id){
+  if(id&&typeof id==="object"&&id.hp!=null)return {...id};
+  const c=BYID[cardIdOf(id)];
+  if(!c)return {id:"spark",atk:100,def:100,hp:800,maxhp:800,shield:0,usedAb:false,revive:false,halfNext:false,noDef:false,stun:false,guard:false,stink:false};
+  return {id:c.id,atk:c.atk,def:c.def,hp:c.hp,maxhp:c.hp,shield:0,usedAb:false,revive:false,halfNext:false,noDef:false,stun:false,guard:false,stink:false};
+}
+function defaultSave(){
+  const starters=["spark","sprout","pebble","bubble","pengu","shroom","cloudcat","coinfish","ant","seed","snail","bread","fox","owl","cactus","snowolf","bee","isle","hawk","ink","prism","smokedrake","crystal","siren"];
+  const col={};starters.forEach(id=>col[id]=1);
+  return {coins:180,col,deck:[...starters],daily:null,dailyDate:"",packsLeft:3,gfx:true,sfx:true,wins:0,streak:0,lastVisit:"",lastFloor:""};
+}
+function load(){
+  try{save=JSON.parse(localStorage.getItem(SAVE_KEY))||defaultSave()}catch{save=defaultSave()}
+  if(!save.col)save=defaultSave();
+  save.deck=(save.deck||[]).filter(id=>BYID[id]);
+  if(save.dailyDate!==today())save.packsLeft=3;
+  refreshDaily();checkStreak();
+}
+function persist(){localStorage.setItem(SAVE_KEY,JSON.stringify(save))}
+function refreshDaily(){
+  if(save.dailyDate===today()&&save.daily&&save.daily.length===7)return;
+  const used=new Set();save.daily=[];
+  const pool=CARDS.slice();
+  while(save.daily.length<7){
+    const c=pool[Math.floor(Math.random()*pool.length)];
+    if(!used.has(c.id)){used.add(c.id);save.daily.push(c.id)}
+  }
+  save.dailyDate=today();save.packsLeft=3;persist();
+}
+function checkStreak(){
+  const t=today();
+  if(save.lastVisit===t)return;
+  if(save.lastVisit===yesterday())save.streak=Math.min(5,(save.streak||0)+1);
+  else save.streak=1;
+  save.lastVisit=t;
+  if(save.lastFloor!==t&&Math.random()<0.2){
+    save.lastFloor=t;
+    const legs=CARDS.filter(c=>c.r==="l"||c.r==="lp");
+    const c=legs[Math.floor(Math.random()*legs.length)];
+    if(c){
+      if(giveCard(c.id))setTimeout(()=>modal(`<h3>No chão!</h3><p>Você achou ${c.name} (${RLABEL[c.r]}).</p>`+cardHTML(c)+`<button class="btn gold" onclick="closeModal()">Pegar</button>`),400);
+      else {const add=Math.round(RAR[c.r].price/4);save.coins+=add;setTimeout(()=>toast("Carta lendária no chão... já tinha. +"+add+" moedas"),400)}
+    }
+  }
+  persist();
+}
+function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on"));document.getElementById(id).classList.add("on")}
+function toast(t){const e=document.getElementById("toast");e.textContent=t;e.classList.add("on");clearTimeout(toast._t);toast._t=setTimeout(()=>e.classList.remove("on"),2200)}
+function modal(h){document.getElementById("modalBox").innerHTML=h;document.getElementById("modal").classList.add("on")}
+function closeModal(){document.getElementById("modal").classList.remove("on")}
+function toggleFS(){if(!document.fullscreenElement)document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();else document.exitFullscreen&&document.exitFullscreen()}
+function toggleGfx(){save.gfx=!save.gfx;persist();syncOpt()}
+function toggleSfx(){save.sfx=!save.sfx;persist();syncOpt()}
+function syncOpt(){const g=document.getElementById("gfxBtn"),s=document.getElementById("sfxBtn");if(g)g.textContent=save.gfx?"On":"Off";if(s)s.textContent=save.sfx?"On":"Off"}
+function resetSave(){if(confirm("Apagar tudo?")){localStorage.removeItem(SAVE_KEY);load();goMenu()}}
+function hideShopTalk(){document.getElementById("shopTalk").classList.add("hide")}
+function rarScore(r){return {c:1,i:2,r:3,e:4,ep:5,l:6,lp:7}[r]||0}
+function typeBeats(a,b){return !!(a&&b&&TYPES[a]&&TYPES[a].beats.includes(b))}
+function rarityClass(r){return "r-"+(r==="ep"?"ep":r==="lp"?"lp":r)}
+function artSVG(c){
+  const a=RAR[c.r]?["#9aa3b2","#3dba6e","#3b82f6","#22d3ee","#a855f7","#fbbf24","#ff6a1a"][rarScore(c.r)-1]:"#888";
+  return `<svg viewBox="0 0 100 100" width="72" height="72"><circle cx="50" cy="54" r="28" fill="${a}"/><circle cx="40" cy="46" r="4" fill="#111"/><circle cx="60" cy="46" r="4" fill="#111"/><ellipse cx="50" cy="62" rx="10" ry="5" fill="#1113"/></svg>`;
+}
+function cardHTML(card,opt={}){
+  if(!card)return "";
+  const extra=opt.inst?`<div class="hpbar"><i style="width:${Math.max(0,opt.inst.hp/opt.inst.maxhp*100)}%"></i></div>`:"";
+  const used=opt.mark==="em uso"?`<span class="use-tag">em uso</span>`:"";
+  const tp=card.t&&TYPES[card.t]?`<span class="ttag" style="color:${TYPES[card.t].c}">${TYPES[card.t].n}</span>`:"";
+  const ab=card.ab?`<b>${card.ab.n}</b><span class="hint">${card.ab.d}</span>`:`<span class="hint">Sem habilidade</span>`;
+  return `<div class="card ${rarityClass(card.r)} ${opt.cls||""}" data-id="${card.id}" ${opt.attr||""}>${used}
+    <div class="face front"><span class="rar">${RLABEL[card.r]}</span>${tp}<div class="cname">${card.name}</div><div class="art">${artSVG(card)}</div>
+    <div class="stats"><div class="stat">ATK<b>${opt.inst?opt.inst.atk:card.atk}</b></div><div class="stat">DEF<b>${opt.inst?opt.inst.def:card.def}</b></div><div class="stat">HP<b>${opt.inst?opt.inst.hp:card.hp}</b></div></div>${extra}</div>
+    <div class="face back"><div class="cname">${card.name}</div>${ab}</div></div>`;
+}
+function bindFlips(root){root.querySelectorAll(".card").forEach(el=>el.addEventListener("dblclick",e=>{e.stopPropagation();el.classList.toggle("flipped")}))}
+
+function goMenu(){document.getElementById("deckSide").classList.remove("on");show("menu");document.getElementById("menuHint").textContent=`🪙 ${save.coins} · baralho ${save.deck.length}/${DECK_SIZE} · dias ${save.streak||1}`;renderBest4();document.getElementById("waitBox").innerHTML=""}
+function renderBest4(){
+  const box=document.getElementById("best4");
+  const list=(save.deck||[]).map(id=>BYID[id]).filter(Boolean).sort((a,b)=>rarScore(b.r)-rarScore(a.r)||(b.atk+b.def+b.hp)-(a.atk+a.def+a.hp));
+  box.innerHTML=list.slice(0,4).map(c=>cardHTML(c,{cls:"tiny"})).join("");
+}
+function goCollection(){show("collection");renderCollection();renderDeckSide()}
+function openDeckFromMenu(){goCollection();document.getElementById("deckSide").classList.add("on");renderDeckSide()}
+function toggleDeckSide(){document.getElementById("deckSide").classList.toggle("on");renderDeckSide()}
+function goShop(){show("shop");document.getElementById("shopTalk").classList.remove("hide");renderShop()}
+function goOptions(){show("options");syncOpt()}
+function goMode(){show("modes")}
+
+function renderCollection(){
+  document.getElementById("colCoins").textContent="🪙 "+save.coins;
+  const g=document.getElementById("colGrid");g.innerHTML="";
+  CARDS.filter(c=>owns(c.id)).forEach(c=>{
+    const used=save.deck.includes(c.id);
+    const wrap=document.createElement("div");
+    wrap.innerHTML=cardHTML(c,{cls:deckPick===c.id?"pick":"",mark:used?"em uso":""});
+    wrap.querySelector(".card").onclick=()=>{if(used){toast("Já está no baralho");return}deckPick=deckPick===c.id?null:c.id;renderCollection();renderDeckSide()};
+    g.appendChild(wrap);
+  });
+  bindFlips(g);
+}
+function putInDeckSlot(i){
+  if(!deckPick){toast("Escolha uma carta livre.");return}
+  if(i>=save.deck.length)save.deck.push(deckPick);else save.deck[i]=deckPick;
+  if(save.deck.length>DECK_SIZE)save.deck.length=DECK_SIZE;
+  deckPick=null;persist();renderCollection();renderDeckSide();
+}
+function renderDeckSide(){
+  document.getElementById("deckCount").textContent=save.deck.length+"/"+DECK_SIZE;
+  document.getElementById("deckPickHint").textContent=deckPick?"Clique num espaço":"Carta livre → espaço";
+  const dg=document.getElementById("deckGrid");dg.innerHTML="";
+  for(let i=0;i<DECK_SIZE;i++){
+    const id=save.deck[i];
+    if(!id){const e=document.createElement("div");e.className="slot-empty";e.textContent="vazio";e.onclick=()=>putInDeckSlot(i);dg.appendChild(e)}
+    else {const w=document.createElement("div");w.innerHTML=cardHTML(BYID[id],{mark:i+1});w.querySelector(".card").onclick=()=>putInDeckSlot(i);dg.appendChild(w)}
+  }
+}
+function renderShop(){
+  refreshDaily();
+  document.getElementById("shopCoins").textContent="🪙 "+save.coins;
+  document.getElementById("shopDay").textContent="Ofertas de "+save.dailyDate+" · pacotes rest. "+(save.packsLeft||0);
+  const row=document.getElementById("dailyRow");row.innerHTML="";
+  save.daily.forEach((id,idx)=>{
+    const d=document.createElement("div");d.className="shop-item";
+    if(!id){d.innerHTML='<span class="hint">Esgotada</span>';row.appendChild(d);return}
+    const c=BYID[id],has=owns(id);
+    d.innerHTML=cardHTML(c)+`<button class="btn gold" ${has?"disabled":""} onclick="buyDaily(${idx})">${has?"Já tem":RAR[c.r].price}</button>`;
+    row.appendChild(d);
+  });
+  bindFlips(row);
+  document.getElementById("packBtn").disabled=!(save.packsLeft>0);
+  document.getElementById("rarePackRow").style.display=isFriday()?"flex":"none";
+}
+function buyDaily(idx){
+  const id=save.daily[idx];if(!id)return;const c=BYID[id];
+  if(save.coins<RAR[c.r].price){toast("Moedas insuficientes");return}
+  save.coins-=RAR[c.r].price;giveCard(id);save.daily[idx]=null;persist();renderShop();toast("Comprou "+c.name);
+}
+function openGot(got,title){
+  let extras=0;
+  got.forEach(c=>{if(!giveCard(c.id)){const add=Math.max(8,Math.round(RAR[c.r].price/4));save.coins+=add;extras+=add}});
+  persist();renderShop();
+  modal(`<h3>${title}</h3><div class="row">${got.map(c=>cardHTML(c,{cls:"tiny"})).join("")}</div><p class="hint">${extras?"Repetidas +"+extras+" moedas":"Novas na coleção"}</p><button class="btn gold" onclick="closeModal()">Ok</button>`);
+}
+function buyPack(){
+  if((save.packsLeft||0)<=0){toast("Limite de 3 pacotes hoje.");return}
+  if(save.coins<PACK_PRICE){toast("Moedas insuficientes");return}
+  save.coins-=PACK_PRICE;save.packsLeft--;
+  const bag=CARDS.filter(c=>["c","i","r","e"].includes(c.r));
+  const used=new Set(),got=[];
+  while(got.length<5){const c=bag[Math.floor(Math.random()*bag.length)];if(!used.has(c.id)){used.add(c.id);got.push(c)}}
+  openGot(got,"Pacote");
+}
+function buyRarePack(){
+  if(!isFriday()){toast("Só sexta.");return}
+  if(save.coins<RARE_PACK_PRICE){toast("Moedas insuficientes");return}
+  save.coins-=RARE_PACK_PRICE;
+  const bag=CARDS.filter(c=>["e","ep","l","lp"].includes(c.r));
+  const used=new Set(),got=[];
+  while(got.length<5){const c=bag[Math.floor(Math.random()*bag.length)];if(!used.has(c.id)){used.add(c.id);got.push(c)}}
+  openGot(got,"Pacote raro");
+}
+
+/* matchmaking kids */
+function kidOffer(){
+  const roll=Math.random();
+  let ai="fredom",bet=10;
+  if(roll>0.82){ai="itc";bet=180+Math.floor(Math.random()*220)}
+  else if(roll>0.5){ai="hep";bet=50+Math.floor(Math.random()*80)}
+  else if(roll>0.25){ai="gom";bet=20+Math.floor(Math.random()*30)}
+  else {ai="fredom";bet=10+Math.floor(Math.random()*15)}
+  return {name:KIDS[Math.floor(Math.random()*KIDS.length)],ai,bet};
+}
+function waitKid(){
+  if(save.deck.length!==DECK_SIZE){toast("Baralho precisa ter 24 cartas.");openDeckFromMenu();return}
+  const box=document.getElementById("waitBox");
+  box.textContent="Esperando alguém na mesa...";
+  setTimeout(()=>{
+    waitingKid=kidOffer();
+    box.innerHTML=`<div class="kid-card">${waitingKid.name} quer jogar<br>Aposta: <b>${waitingKid.bet}</b> 🪙<br>
+      <button class="btn gold" onclick="acceptKid()">Aceitar</button>
+      <button class="btn" onclick="waitKid()">Esperar outro</button></div>`;
+  },700+Math.random()*1200);
+}
+function acceptKid(){
+  if(!waitingKid)return;
+  if(save.coins<waitingKid.bet){toast("Sem moedas para essa aposta.");return}
+  startMatch("ai",waitingKid.name,waitingKid.ai,waitingKid.bet);
+}
+function kidDeck(ai){
+  let pool=CARDS.slice();
+  if(ai==="fredom")pool=CARDS.filter(c=>["c","i","r"].includes(c.r));
+  if(ai==="gom")pool=CARDS.filter(c=>["c","i","r","e"].includes(c.r));
+  if(ai==="itc"){
+    const d=shuffle(CARDS.filter(c=>c.r!=="lp")).slice(0,23);
+    const helper=CARDS.filter(c=>c.r==="ep").sort((a,b)=>b.atk-a.atk)[0];
+    return shuffle([helper.id,...d.map(c=>c.id)]).slice(0,24);
+  }
+  return shuffle(pool.map(c=>c.id)).slice(0,24);
+}
+
+function drawTo(hand,deck,discard,n=1){
+  const got=[];
+  for(let i=0;i<n;i++){
+    if(!deck.length){if(!discard.length)break;deck.push(...shuffle(discard.splice(0)))}
+    if(deck.length)got.push(deck.pop());
+  }
+  hand.push(...got);return got;
+}
+function startMatch(kind,oppName,aiType,bet){
+  const myDeck=shuffle([...save.deck]);
+  G={kind,oppName,aiType:aiType||"hep",bet:bet||0,myPts:0,oppPts:0,turn:"me",phase:"pick",log:[],busy:false,
+    me:{deck:myDeck,hand:[],discard:[],active:null,swaps:0,cow:false,lockedAtk:false,atkStreak:0,gugh:false},
+    opp:{deck:[],hand:[],discard:[],active:null,swaps:0,cow:false,lockedAtk:false,atkStreak:0,gugh:false}};
+  drawTo(G.me.hand,G.me.deck,G.me.discard,3);
+  if(kind==="ai"){G.opp.deck=kidDeck(G.aiType);drawTo(G.opp.hand,G.opp.deck,G.opp.discard,3)}
+  show("game");pickPhase();
+}
+function pickPhase(){
+  G.phase="pick";
+  modal(`<h3>Escolha a carta ativa</h3><div class="row" id="pickRow">${G.me.hand.map(x=>cardHTML(BYID[cardIdOf(x)],{cls:"tiny",attr:`data-pid="${cardIdOf(x)}"`})).join("")}</div>`);
+  document.querySelectorAll("#pickRow .card").forEach(el=>el.onclick=()=>chooseActive(el.dataset.pid));
+}
+function chooseActive(id){
+  const i=handIndex(G.me.hand,id);if(i<0)return;
+  G.me.active=asInst(G.me.hand.splice(i,1)[0]);linkGuard("me");closeModal();
+  if(G.kind==="ai"){G.opp.active=asInst(G.opp.hand.shift());linkGuard("opp")}
+  coinFlip();
+}
+function coinFlip(){
+  const visitorStarts=Math.random()<0.5;
+  G.turn=visitorStarts?"opp":"me";
+  G.phase="play";
+  modal(`<div class="coin3d" style="width:70px;height:70px;margin:8px auto;border-radius:50%;background:#f0c14b;display:flex;align-items:center;justify-content:center;font-weight:900">${visitorStarts?"Cara":"Coroa"}</div><p>${visitorStarts?"O visitante começa":"Você começa"}</p><button class="btn gold" onclick="closeModal();renderGame();startTimer();if(G.turn==='opp'&&G.kind==='ai')setTimeout(aiTurn,400)">Ok</button>`);
+}
+
+function cowMult(p){return (!p||!p.cow)?1:Math.min(2.4,1.35+(p.swaps-3)*0.2)}
+function gughMult(p){return (!p||!p.gugh)?1:Math.min(2,1.3+((p.atkStreak||3)-3)*0.15)}
+function wait(ms){return new Promise(r=>setTimeout(r,ms))}
+async function showAct(text,color){
+  const el=document.getElementById("banner");if(!el){log(text);await wait(600);return}
+  el.textContent=text;el.style.borderColor=color||"#f0c14b";el.classList.add("on");log(text);
+  await wait(save.gfx?1100:700);el.classList.remove("on");
+}
+function log(t){if(G)G.log=[t,...(G.log||[])].slice(0,8)}
+function stopTimer(){if(G&&G.tid){clearInterval(G.tid);G.tid=null}}
+function startTimer(){
+  stopTimer();if(!G||G.phase==="over")return;G.timeLeft=30;updateTimer();
+  G.tid=setInterval(()=>{if(!G||G.busy)return;G.timeLeft--;updateTimer();if(G.timeLeft<=0){stopTimer();onTimeout()}},1000);
+}
+function updateTimer(){const el=document.getElementById("timerEl");if(!el||!G)return;el.textContent=G.timeLeft;el.classList.toggle("low",G.timeLeft<=8)}
+function onTimeout(){if(G.turn==="me")doAction("pass");else endTurn()}
+
+function pileHTML(arr,label){
+  const top=arr[arr.length-1];
+  return `<div>${label}</div>${top&&BYID[cardIdOf(top)]?cardHTML(BYID[cardIdOf(top)],{cls:"tiny"}):""}<div>${arr.length}</div>`;
+}
+function renderGame(){
+  if(!G)return;
+  document.getElementById("oppName").textContent=G.oppName+(G.bet?(" · "+G.bet+"🪙"):"");
+  document.getElementById("oppPts").textContent=G.oppPts;
+  document.getElementById("myPts").textContent=G.myPts;
+  const pips=n=>[0,1,2].map(i=>`<i class="pip ${i<n?"on":""}"></i>`).join("");
+  document.getElementById("oppPips").innerHTML=pips(G.oppPts);
+  document.getElementById("myPips").innerHTML=pips(G.myPts);
+  document.getElementById("turnTxt").textContent=G.phase==="over"?"Fim":(G.turn==="me"?"Sua vez":"Vez do rival");
+  document.getElementById("oppDiscard").innerHTML=pileHTML(G.opp.discard,"Descarte");
+  document.getElementById("myDiscard").innerHTML=pileHTML(G.me.discard,"Descarte");
+  document.getElementById("oppDeckPile").innerHTML=`<div>Monte</div><div>${G.opp.deck.length}</div>`;
+  document.getElementById("myDeckPile").innerHTML=`<div>Monte</div><div>${G.me.deck.length}</div>`;
+  document.getElementById("myCow").innerHTML=(G.me.cow?`<span class="cowtag">COVARDE</span>`:"")+(G.me.gugh?`<span class="gughtag">GUGH-HO</span>`:"");
+  document.getElementById("oppCow").innerHTML=(G.opp.cow?`<span class="cowtag">COVARDE</span>`:"")+(G.opp.gugh?`<span class="gughtag">GUGH-HO</span>`:"");
+  document.getElementById("oppSlot").innerHTML=G.opp.active?cardHTML(BYID[G.opp.active.id],{inst:{...G.opp.active,shield:0,guard:false}}):"";
+  document.getElementById("mySlot").innerHTML=G.me.active?cardHTML(BYID[G.me.active.id],{inst:G.me.active}):"";
+  document.getElementById("oppHand").innerHTML=G.opp.hand.map(()=>'<div class="card tiny r-c"><div class="face front"></div></div>').join("");
+  const mh=document.getElementById("myHand");
+  mh.innerHTML=G.me.hand.map(x=>cardHTML(BYID[cardIdOf(x)],{cls:"tiny",inst:x&&x.hp!=null?x:null,attr:`data-hid="${cardIdOf(x)}"`})).join("");
+  bindFlips(mh);bindFlips(document.getElementById("mySlot"));
+  const act=document.getElementById("actions");
+  const myTurn=G.phase==="play"&&G.turn==="me"&&!G.busy;
+  if(G.phase==="needActive"){
+    act.innerHTML='<span class="hint">Clique uma carta da mão</span>';
+    mh.querySelectorAll(".card").forEach(el=>el.onclick=()=>activateFromHand(el.dataset.hid));
+  }else{
+    const canAb=myTurn&&G.me.active&&BYID[G.me.active.id].ab&&!G.me.active.usedAb;
+    act.innerHTML=myTurn?`
+      <button class="btn gold" onclick="doAction('atk')" ${G.me.lockedAtk?"disabled":""}>Atacar</button>
+      <button class="btn" onclick="doAction('ab')" ${canAb?"":"disabled"}>Habilidade</button>
+      <button class="btn" onclick="doAction('def')" ${G.me.active&&!G.me.active.noDef&&!G.me.lockedAtk?"":"disabled"}>Defender</button>
+      <button class="btn" onclick="beginSwap()" ${G.me.hand.length&&!(G.me.active&&G.me.active.stink)?"":"disabled"}>Trocar carta</button>
+      <button class="btn" onclick="doAction('handswap')">Trocar mão</button>
+      <button class="btn" onclick="doAction('pass')">Passar</button>`:'<span class="hint">Aguarde</span>';
+  }
+  document.getElementById("logbox").innerHTML=(G.log||[]).slice(0,5).map(x=>"• "+x).join("<br>");
+}
+function beginSwap(){
+  if(G.me.active&&G.me.active.stink){toast("Fedorenta");return}
+  toast("Clique a carta da mão");
+  document.querySelectorAll("#myHand .card").forEach(el=>el.onclick=()=>doAction("swap",el.dataset.hid));
+}
+async function activateFromHand(id){
+  const i=handIndex(G.me.hand,id);if(i<0)return;
+  G.me.active=asInst(G.me.hand.splice(i,1)[0]);linkGuard("me");
+  if(G.kind!=="ai")send({t:"activate",id});
+  G.phase="play";renderGame();startTimer();
+}
+function linkGuard(who){
+  const self=who==="me"?G.me:G.opp;
+  if(!self.active||self.active.id!=="trocavidas"||!self.hand.length)return;
+  const tv=self.active;tv.bodyguard=true;
+  const incoming=self.hand[0];self.hand[0]=tv;self.active=asInst(incoming);
+}
+async function doAction(type,extra){
+  if(!G||G.turn!=="me"||G.phase!=="play"||G.busy)return;
+  if(type==="atk"&&G.me.lockedAtk)return;
+  stopTimer();G.busy=true;
+  const keep=type==="def"||type==="swap"||(type==="ab"&&G.me.active&&BYID[G.me.active.id].ab&&BYID[G.me.active.id].ab.keepTurn);
+  await resolveAction("me",type,extra);
+  if(G.kind!=="ai")send({t:"act",type,extra});
+  G.busy=false;
+  if(G.phase==="over")return;
+  if(keep){renderGame();startTimer();return}
+  if(G.phase!=="needActive")endTurn();else startTimer();
+}
+async function resolveAction(who,type,extra){
+  const self=who==="me"?G.me:G.opp,foe=who==="me"?G.opp:G.me,sName=who==="me"?"Você":G.oppName;
+  if(type!=="atk")self.atkStreak=0;
+  if(type!=="swap"){if(who==="me")G.meStinkNext=false;else G.oppStinkNext=false}
+  if(type==="atk"){
+    self.atkStreak=(self.atkStreak||0)+1;
+    if(self.atkStreak>=3)self.gugh=true;
+    let dmg=self.active.atk+(self.active.buff||0);self.active.buff=0;
+    dmg=Math.round(dmg*gughMult(self));
+    const at=BYID[self.active.id].t,dt=foe.active&&BYID[foe.active.id].t;
+    if(typeBeats(at,dt)){dmg=Math.round(dmg*1.5);await showAct("Vantagem de tipo!","#4ade80")}
+    if(foe.active&&foe.active.stun){dmg*=2;foe.active.stun=false}
+    if(foe.active&&foe.active.halfNext){dmg=Math.ceil(dmg/2);foe.active.halfNext=false}
+    await showAct(sName+" ATACA "+dmg,"#f87171");
+    const res=applyDamage(foe,dmg,self.active,document.getElementById(who==="me"?"oppSlot":"mySlot"));
+    if(res.stunnedAttacker)self.active.stun=true;
+    checkKO(who);
+  }else if(type==="def"){
+    if(self.active.noDef){self.active.noDef=false;return}
+    self.active.shield+=self.active.def;self.active.guard=true;self.lockedAtk=true;
+    if(who==="me")toast("Defesa ativa");
+  }else if(type==="pass"){if(who==="me")toast("Passou")}
+  else if(type==="handswap"){
+    const n=self.hand.length||2;
+    self.hand.forEach(x=>self.discard.push(cardIdOf(x)));self.hand.length=0;
+    drawTo(self.hand,self.deck,self.discard,n);
+    await showAct(sName+" TROCOU A MÃO","#93c5fd");
+  }else if(type==="swap"){
+    if(self.active&&self.active.stink)return;
+    const idx=handIndex(self.hand,extra);if(idx<0)return;
+    const pending=who==="me"?G.meStinkNext:G.oppStinkNext;
+    const old=self.active,incoming=self.hand[idx];
+    self.hand[idx]=old;self.active=asInst(incoming);linkGuard(who);
+    self.swaps=(self.swaps||0)+1;if(self.swaps>=3)self.cow=true;
+    if(pending)self.active.stink=true;
+  }else if(type==="ab"){
+    const card=BYID[self.active.id];
+    if(!card.ab||self.active.usedAb)return;
+    self.active.usedAb=true;
+    await showAct(sName+" usa "+card.ab.n,"#c4b5fd");
+    useAbility(who,card.ab.fn);checkKO(who);
+  }
+  renderGame();
+}
+function findGuard(t){return t.hand.findIndex(x=>x&&typeof x==="object"&&x.bodyguard&&x.hp>0)}
+function applyDamage(target,dmg,att,slotEl){
+  if(!target.active)return {total:0,hp:0,stunnedAttacker:false};
+  dmg=Math.round(dmg*cowMult(target)*gughMult(target));
+  const gi=findGuard(target);
+  if(gi>=0){target.hand[gi].hp-=dmg;if(target.hand[gi].hp<=0){target.discard.push(target.hand[gi].id);target.hand.splice(gi,1)}return {total:dmg,hp:0,stunnedAttacker:false}}
+  const guarded=!!target.active.guard;let left=dmg;
+  if(target.active.shield>0){const use=Math.min(target.active.shield,left);target.active.shield-=use;left-=use}
+  target.active.hp-=left;if(guarded)target.active.guard=false;
+  return {total:dmg,hp:left,stunnedAttacker:guarded&&left<=0&&dmg>0&&!!att};
+}
+function checkKO(attacker){
+  const foe=attacker==="me"?G.opp:G.me,self=attacker==="me"?G.me:G.opp;
+  if(!foe.active||foe.active.hp>0)return;
+  if(foe.active.revive){foe.active.hp=1000;foe.active.revive=false;return}
+  log((BYID[foe.active.id]||{}).name+" saiu");
+  foe.discard.push(foe.active.id);foe.active=null;
+  if(attacker==="me")G.myPts++;else G.oppPts++;
+  if(G.myPts>=3||G.oppPts>=3){endGame();return}
+  if(attacker==="opp"){G.phase="needActive";if(!G.me.hand.length)drawTo(G.me.hand,G.me.deck,G.me.discard,1)}
+  else if(G.kind==="ai"){
+    if(!G.opp.hand.length)drawTo(G.opp.hand,G.opp.deck,G.opp.discard,1);
+    if(!G.opp.hand.length){G.myPts=3;endGame();return}
+    G.opp.active=asInst(G.opp.hand.shift());linkGuard("opp");
+  }
+}
+function useAbility(who,fn){
+  const self=who==="me"?G.me:G.opp,foe=who==="me"?G.opp:G.me,A=self.active,B=foe.active;
+  if(fn==="heal")A.hp=Math.min(A.maxhp,A.hp+600);
+  if(fn==="buffatk")A.buff=(A.buff||0)+400;
+  if(fn==="shield")A.shield+=A.def;
+  if(fn==="draw")drawTo(self.hand,self.deck,self.discard,1);
+  if(fn==="weaken"&&B)B.atk=Math.max(100,B.atk-300);
+  if(fn==="forge")A.atk+=300;
+  if(fn==="stinksetup"){if(who==="me")G.meStinkNext=true;else G.oppStinkNext=true}
+  if(fn==="steal"&&B){self.parked=self.parked||A;foe.active=null;self.active=B;B.stolen=true;if(who==="opp")G.phase="needActive";else if(G.kind==="ai"&&foe.hand.length)foe.active=asInst(foe.hand.shift())}
+  if(fn==="dust"&&B){B.atk=Math.max(100,B.atk-200);applyDamage(foe,300,A)}
+  if(fn==="pierce"&&B){const sh=B.shield;B.shield=0;applyDamage(foe,500,A);B.shield=sh}
+  if(fn==="regen")A.hp=Math.min(A.maxhp,A.hp+(A.hp<A.maxhp/2?1200:800));
+  if(fn==="vow"){A.shield+=800;A.hp=Math.min(A.maxhp,A.hp+300)}
+  if(fn==="lifelink")linkGuard(who);
+  if(fn==="reflect"&&B)applyDamage(foe,400,A);
+  if(fn==="cycle"){if(B)applyDamage(foe,600,A);A.hp=Math.min(A.maxhp,A.hp+600);drawTo(self.hand,self.deck,self.discard,1)}
+  if(fn==="wall"){A.shield+=1200;if(B)B.halfNext=true}
+  if(fn==="revive")A.revive=true;
+  if(fn==="storm"&&B){applyDamage(foe,700,A);B.noDef=true}
+  if(fn==="bang"){if(B)applyDamage(foe,800,A);A.hp=Math.min(A.maxhp,A.hp+800);A.atk+=200;A.def+=200}
+  if(fn==="truehit"&&B){const sh=B.shield;B.shield=0;applyDamage(foe,A.atk,A);B.shield=sh}
+  if(fn==="execute"&&B)B.hp=0;
+  if(fn==="point"){if(who==="me")G.myPts++;else G.oppPts++;if(G.myPts>=3||G.oppPts>=3)endGame()}
+}
+function endTurn(){
+  stopTimer();const self=G.turn==="me"?G.me:G.opp;self.lockedAtk=false;
+  if(self.hand.length<4)drawTo(self.hand,self.deck,self.discard,1);
+  if(G.phase==="over")return;
+  G.turn=G.turn==="me"?"opp":"me";renderGame();startTimer();
+  if(G.turn==="opp"&&G.kind==="ai")setTimeout(aiTurn,350);
+}
+function pickAiAction(){
+  const A=G.opp.active,B=G.me.active,c=A&&BYID[A.id],kind=G.aiType||"hep";
+  if(kind==="gom")return {type:"atk"};
+  if(kind==="fredom"){
+    let type=["atk","def","ab","swap","handswap","pass"][Math.floor(Math.random()*6)];
+    if(type==="ab"&&(!c||!c.ab||A.usedAb))type="atk";
+    return {type,extra:type==="swap"?cardIdOf(G.opp.hand[0]):null};
+  }
+  const danger=B&&A&&B.atk>=A.hp,weak=A&&A.hp<=A.maxhp*0.35,greedy=kind==="hep"&&Math.random()<0.28;
+  if(kind==="itc"){
+    if(c&&c.ab&&!A.usedAb)return {type:"ab"};
+    if(danger)return {type:"def"};
+    return {type:"atk"};
+  }
+  if(c&&c.ab&&!A.usedAb&&(weak||Math.random()<0.35))return {type:"ab"};
+  if(danger&&!greedy)return {type:"def"};
+  if(weak&&G.opp.hand.length)return {type:"swap",extra:cardIdOf(G.opp.hand[0])};
+  return {type:"atk"};
+}
+async function aiTurn(){
+  if(!G||G.phase==="over"||G.turn!=="opp"||G.busy)return;
+  G.busy=true;
+  if(!G.opp.active){
+    if(!G.opp.hand.length)drawTo(G.opp.hand,G.opp.deck,G.opp.discard,1);
+    if(!G.opp.hand.length){G.busy=false;G.myPts=3;endGame();return}
+    G.opp.active=asInst(G.opp.hand.shift());linkGuard("opp");renderGame();
+  }
+  const c=BYID[G.opp.active.id];
+  let {type,extra}=pickAiAction();
+  await resolveAction("opp",type,extra);
+  if((type==="def"||type==="swap"||(type==="ab"&&c&&c.ab&&c.ab.keepTurn))&&type==="ab"&&G.opp.hand.length)
+    await resolveAction("opp","swap",cardIdOf(G.opp.hand[0]));
+  G.busy=false;if(G.phase!=="over")endTurn();
+}
+function endGame(){
+  stopTimer();G.phase="over";G.busy=false;
+  const win=G.myPts>=3;
+  let coins=0;
+  if(G.bet){if(win){save.coins+=G.bet;coins=G.bet}else{save.coins=Math.max(0,save.coins-G.bet);coins=-G.bet}}
+  else {
+    const pay=AI_PAY[G.aiType]||30;
+    coins=win?pay+G.oppPts*12:Math.max(6,Math.round(pay/6));
+    save.coins+=coins;
+  }
+  if(win)save.wins=(save.wins||0)+1;
+  persist();renderGame();
+  modal(`<h3>${win?"Vitória":"Derrota"}</h3><p>${G.myPts} x ${G.oppPts}</p><p class="hint">${coins>=0?"+":""}${coins} moedas</p><button class="btn gold" onclick="closeModal();goMenu()">Mesa</button>`);
+}
+function concede(){if(G&&G.phase!=="over"){G.oppPts=3;endGame();if(G.kind!=="ai")send({t:"concede"})}cleanupNet();goMenu()}
+
+/* net */
+function netPrefix(){return "csrpwf-"}
+function pvpBet(){return Math.max(0,Number(document.getElementById("pvpBet")&&document.getElementById("pvpBet").value)||0)}
+function hostRoom(){const code=Math.random().toString(36).slice(2,6).toUpperCase();setupPeer(netPrefix()+code,true,code)}
+function showJoin(){document.getElementById("netBox").innerHTML=`<div class="row"><input id="joinCode" placeholder="ABCD"/><button class="btn gold" onclick="joinRoom(document.getElementById('joinCode').value)">Entrar</button></div>`}
+function joinRoom(code){code=(code||"").trim().toUpperCase();if(code.length<3)return;setupPeer(null,false,code,netPrefix()+code)}
+function randomMatch(){const slot=Math.floor(Math.random()*8);setupPeer(netPrefix()+"R"+slot,true,"R"+slot,null,true)}
+function setupPeer(id,isHost,code,connectTo,retry){
+  cleanupNet();net.isHost=isHost;net.code=code;
+  net.peer=new Peer(id||undefined);
+  net.peer.on("open",()=>{
+    document.getElementById("netBox").innerHTML="<p>Sala "+code+(isHost?" · esperando...":"")+"</p>";
+    if(!isHost&&connectTo)attach(net.peer.connect(connectTo));
+  });
+  net.peer.on("connection",attach);
+  net.peer.on("error",e=>{if(retry)setupPeer(null,false,code,id);else toast("Rede: "+e.type)});
+}
+function attach(conn){
+  net.conn=conn;
+  conn.on("open",()=>{if(net.isHost){startMatch("pvp","Amigo","pvp",pvpBet());send({t:"hello",bet:G.bet,deckN:save.deck.length})}else toast("Conectado")});
+  conn.on("data",onNet);
+}
+function send(msg){if(net.conn)net.conn.send(msg)}
+function cleanupNet(){try{net.conn&&net.conn.close()}catch(e){}try{net.peer&&net.peer.destroy()}catch(e){}net={peer:null,conn:null,isHost:false,code:""}}
+async function onNet(msg){
+  if(msg.t==="hello"){startMatch("pvp","Amigo","pvp",msg.bet||pvpBet());G.turn="opp";G.phase="play";closeModal();renderGame();startTimer()}
+  if(msg.t==="act"){G.busy=true;await resolveAction("opp",msg.type,msg.extra);G.busy=false;const keep=msg.type==="def"||msg.type==="swap";if(!keep&&G.phase!=="needActive")endTurn();else renderGame()}
+  if(msg.t==="activate"){G.phase="play";renderGame()}
+  if(msg.t==="concede"){G.myPts=3;endGame()}
+}
+
+load();goMenu();
+</script>
+</body>
+</html>
