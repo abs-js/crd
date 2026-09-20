@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="24" fill="#c48a4a"/>
+  <rect x="8" y="8" width="112" height="112" rx="18" fill="#d4a056"/>
+  <rect x="18" y="22" width="54" height="76" rx="8" transform="rotate(-12 45 60)" fill="#f4ead0" stroke="#5c3d1c" stroke-width="3"/>
+  <rect x="52" y="18" width="54" height="76" rx="8" transform="rotate(10 79 56)" fill="#2b7de0" stroke="#fff" stroke-width="3"/>
+  <circle cx="79" cy="48" r="12" fill="#f0c14b"/>
+  <text x="64" y="118" text-anchor="middle" font-family="Arial Black, sans-serif" font-size="14" font-weight="700" fill="#3a2410">CSRPWF</text>
+</svg>
